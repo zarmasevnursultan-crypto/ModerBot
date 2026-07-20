@@ -1,13 +1,14 @@
 from collections import defaultdict, deque
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from aiogram import BaseMiddleware
-from aiogram.types import Message
+from aiogram.types import Message, ChatPermissions
 
 user_messages = defaultdict(deque)
 
-LIMIT = 5
-INTERVAL = 5
+LIMIT = 5          # максимум сообщений
+INTERVAL = 5       # за сколько секунд
+MUTE_MINUTES = 5   # мут
 
 
 class AntiSpamMiddleware(BaseMiddleware):
@@ -20,19 +21,40 @@ class AntiSpamMiddleware(BaseMiddleware):
 
         now = datetime.now()
 
-        print(f"[SPAM] {event.from_user.id}: {event.text}")
-
         messages = user_messages[event.from_user.id]
         messages.append(now)
 
         while messages and (now - messages[0]).total_seconds() > INTERVAL:
             messages.popleft()
 
-        print(f"[SPAM] Количество сообщений: {len(messages)}")
-
         if len(messages) > LIMIT:
-            print("[SPAM] Пользователь превысил лимит!")
-            await event.answer("🚫 Не спамь.")
+            try:
+                # Удаляем сообщение
+                await event.delete()
+
+                # Выдаем мут
+                until_date = datetime.now(timezone.utc) + timedelta(minutes=MUTE_MINUTES)
+
+                await event.bot.restrict_chat_member(
+                    chat_id=event.chat.id,
+                    user_id=event.from_user.id,
+                    permissions=ChatPermissions(
+                        can_send_messages=False
+                    ),
+                    until_date=until_date
+                )
+
+                # Очищаем историю сообщений пользователя
+                user_messages[event.from_user.id].clear()
+
+                # Сообщение в чат
+                await event.answer(
+                    f"🚫 {event.from_user.full_name} получил мут на {MUTE_MINUTES} минут за спам."
+                )
+
+            except Exception as e:
+                print("Ошибка AntiSpam:", e)
+
             return
 
         return await handler(event, data)
