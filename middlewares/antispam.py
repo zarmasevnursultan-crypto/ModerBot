@@ -1,13 +1,13 @@
 from collections import defaultdict, deque
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message
 
 user_messages = defaultdict(deque)
 
-LIMIT = 5          # сообщений
-INTERVAL = 5       # секунд
+LIMIT = 5
+INTERVAL = 5
 
 
 class AntiSpamMiddleware(BaseMiddleware):
@@ -20,7 +20,7 @@ class AntiSpamMiddleware(BaseMiddleware):
 
         now = datetime.now()
 
-        print(f"Сообщение от {event.from_user.id}: {event.text}")
+        print(f"[SPAM] {event.from_user.id}: {event.text}")
 
         messages = user_messages[event.from_user.id]
         messages.append(now)
@@ -28,9 +28,10 @@ class AntiSpamMiddleware(BaseMiddleware):
         while messages and (now - messages[0]).total_seconds() > INTERVAL:
             messages.popleft()
 
-        print(f"Количество сообщений: {len(messages)}")
+        print(f"[SPAM] Количество сообщений: {len(messages)}")
 
         if len(messages) > LIMIT:
+            print("[SPAM] Пользователь превысил лимит!")
             await event.answer("🚫 Не спамь.")
             return
 
