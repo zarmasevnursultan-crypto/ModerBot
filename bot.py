@@ -4,17 +4,20 @@ from aiogram import Bot, Dispatcher
 from database import init_db
 
 from config import BOT_TOKEN
+from middlewares.antispam import AntiSpamMiddleware
 
 from handlers.start import router as start_router
 from handlers.help import router as help_router
 from handlers.filter import router as filter_router
-from handlers.warnings import router as warnings_router 
+from handlers.warnings import router as warnings_router
 from handlers.resetwarnings import router as resetwarnings_router
 from handlers.correct import router as correct_router
 
 bot = Bot(token=BOT_TOKEN)
 
 dp = Dispatcher()
+
+dp.message.middleware(AntiSpamMiddleware())
 
 # Подключаем роутеры
 dp.include_router(start_router)
