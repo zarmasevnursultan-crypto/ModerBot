@@ -27,7 +27,10 @@ async def resetwarnings_command(message: Message):
 
     user = message.reply_to_message.from_user
 
-    await reset_warnings(user.id)
+    await reset_warnings(
+        message.chat.id,
+        user.id
+    )
 
     await message.bot.restrict_chat_member(
         chat_id=message.chat.id,

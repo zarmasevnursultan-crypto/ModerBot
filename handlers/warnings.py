@@ -26,7 +26,10 @@ async def warnings_command(message: Message):
         return
 
     user = message.reply_to_message.from_user
-    warnings = await get_warnings(user.id)
+    warnings = await get_warnings(
+        message.chat.id,
+        user.id
+    )
 
     if warnings == 0:
         next_mute = "5 минут"

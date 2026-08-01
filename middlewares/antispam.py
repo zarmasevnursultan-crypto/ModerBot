@@ -21,7 +21,8 @@ class AntiSpamMiddleware(BaseMiddleware):
 
         now = datetime.now()
 
-        messages = user_messages[event.from_user.id]
+        user_key = (event.chat.id, event.from_user.id)
+        messages = user_messages[user_key]
         messages.append(now)
 
         while messages and (now - messages[0]).total_seconds() > INTERVAL:
@@ -45,7 +46,7 @@ class AntiSpamMiddleware(BaseMiddleware):
                 )
 
                 # Очищаем историю сообщений пользователя
-                user_messages[event.from_user.id].clear()
+                user_messages[user_key].clear()
 
                 # Сообщение в чат
                 await event.answer(

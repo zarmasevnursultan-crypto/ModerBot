@@ -32,7 +32,10 @@ async def filter_message(message: Message):
             await message.delete()
 
             # Добавляем предупреждение
-            warnings = await add_warning(message.from_user.id)
+            warnings = await add_warning(
+                message.chat.id,
+                message.from_user.id
+            )
             print(f"Нарушений: {warnings}")
 
             # Определяем время мута
